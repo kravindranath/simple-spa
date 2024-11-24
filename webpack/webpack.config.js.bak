@@ -1,0 +1,58 @@
+const path = require("path");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+require("dotenv-defaults").config(); // Load .env and .env.defaults
+
+const env = process.env.APP_ENV || "local"; // Fallback to 'local' if APP_ENV is not set
+
+const apiTargets = {
+  dev: process.env.DEV_API_URL,
+  local: process.env.LOCAL_API_URL,
+  prod: process.env.PROD_API_URL,
+};
+
+const proxyTarget = apiTargets[env];
+
+module.exports = {
+  entry: "./src/index.jsx", // Entry point
+  output: {
+    path: path.resolve(__dirname, "dist"),
+    filename: "bundle.js",
+    publicPath: "/",
+  },
+  resolve: {
+    extensions: [".js", ".jsx"], // Resolve JS and JSX
+  },
+  module: {
+    rules: [
+      {
+        test: /\.(js|jsx)$/, // Handle JS and JSX files
+        exclude: /node_modules/,
+        use: {
+          loader: "babel-loader",
+        },
+      },
+      {
+        test: /\.css$/, // Handle CSS files
+        use: ["style-loader", "css-loader"],
+      },
+    ],
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: "./public/index.html", // Template for HTML
+    }),
+  ],
+  devServer: {
+    port: 3000,
+    historyApiFallback: true, // For SPA routing
+    proxy: [
+      {
+        context: ["/api"], // Matches the route you want to proxy
+        target: proxyTarget, // Dynamic target based on APP_ENV in .env
+        changeOrigin: true, // Change the origin if needed
+        secure: false, // Set to true if using HTTPS and you trust the server
+      },
+    ],
+  },
+  mode: "development", // Set mode to development
+};

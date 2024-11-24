@@ -1,0 +1,2 @@
+# .env local,dev,prod
+APP_ENV=dev
